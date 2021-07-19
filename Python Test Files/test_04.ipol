@@ -1,0 +1,31 @@
+BEGIN
+
+VARSTR inputString WITH "I have a pen"
+PRINTLN inputString
+
+PRINT "Enter year of birth: "
+VARINT birthyear
+INPUT birthyear
+VARSTR lit WITH "You are "
+VARINT year WITH 2019
+PRINT lit
+PRINTLN SUB year birthyear
+
+VARINT x WITH ADD 100 SUB 9 7
+VARINT y
+STORE 100 IN y
+PRINT "x = "
+PRINTLN x
+PRINT "y = "
+PRINTLN y
+
+VARINT m
+STORE 2 IN m
+
+PRINT "ROOT RAISE 2 2 2 = "
+PRINTLN ROOT RAISE m m m
+
+PRINT "MEAN 1 2 3 4 5 6 = "
+PRINTLN MEAN 1 2 3 4 5 6
+
+END

@@ -1,0 +1,9 @@
+BEGIN	
+VARSTR stringX WITH [I have a pen]
+PRINTLN stringX	
+VARINT x WITH ADD 1 SUB 9 9	
+VARINT y	
+STORE 100 IN y	
+PRINTLN x	
+PRINT y	
+END	

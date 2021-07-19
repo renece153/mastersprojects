@@ -1,0 +1,4 @@
+BEGIN	
+VARSTR stringmo WITH "Enter an integer: "
+INPUT stringmo	
+END
