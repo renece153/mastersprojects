@@ -1,0 +1,13 @@
+C:\Users\rey.torrecampo\source\repos\Exercise2Torrecampo\Exercise2Torrecampo\bin\Debug\netcoreapp3.1\Exercise2Torrecampo.exe
+C:\Users\rey.torrecampo\source\repos\Exercise2Torrecampo\Exercise2Torrecampo\bin\Debug\netcoreapp3.1\Exercise2Torrecampo.deps.json
+C:\Users\rey.torrecampo\source\repos\Exercise2Torrecampo\Exercise2Torrecampo\bin\Debug\netcoreapp3.1\Exercise2Torrecampo.runtimeconfig.json
+C:\Users\rey.torrecampo\source\repos\Exercise2Torrecampo\Exercise2Torrecampo\bin\Debug\netcoreapp3.1\Exercise2Torrecampo.runtimeconfig.dev.json
+C:\Users\rey.torrecampo\source\repos\Exercise2Torrecampo\Exercise2Torrecampo\bin\Debug\netcoreapp3.1\Exercise2Torrecampo.dll
+C:\Users\rey.torrecampo\source\repos\Exercise2Torrecampo\Exercise2Torrecampo\bin\Debug\netcoreapp3.1\Exercise2Torrecampo.pdb
+C:\Users\rey.torrecampo\source\repos\Exercise2Torrecampo\Exercise2Torrecampo\obj\Debug\netcoreapp3.1\Exercise2Torrecampo.csprojAssemblyReference.cache
+C:\Users\rey.torrecampo\source\repos\Exercise2Torrecampo\Exercise2Torrecampo\obj\Debug\netcoreapp3.1\Exercise2Torrecampo.AssemblyInfoInputs.cache
+C:\Users\rey.torrecampo\source\repos\Exercise2Torrecampo\Exercise2Torrecampo\obj\Debug\netcoreapp3.1\Exercise2Torrecampo.AssemblyInfo.cs
+C:\Users\rey.torrecampo\source\repos\Exercise2Torrecampo\Exercise2Torrecampo\obj\Debug\netcoreapp3.1\Exercise2Torrecampo.csproj.CoreCompileInputs.cache
+C:\Users\rey.torrecampo\source\repos\Exercise2Torrecampo\Exercise2Torrecampo\obj\Debug\netcoreapp3.1\Exercise2Torrecampo.dll
+C:\Users\rey.torrecampo\source\repos\Exercise2Torrecampo\Exercise2Torrecampo\obj\Debug\netcoreapp3.1\Exercise2Torrecampo.pdb
+C:\Users\rey.torrecampo\source\repos\Exercise2Torrecampo\Exercise2Torrecampo\obj\Debug\netcoreapp3.1\Exercise2Torrecampo.genruntimeconfig.cache
