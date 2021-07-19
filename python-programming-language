@@ -1,0 +1,665 @@
+###########################################################
+"""
+INPOL Interpreter for Assingment 3
+Author: Rey Lawrence Torrecampo
+Date Published: December 27, 2020
+Tested in:
+    1. test01.ipol
+    2. test02.ipol
+    3. test03.ipol
+    4. test04.ipol
+
+Change Logs:
+    Follow format: [Version Number] [Date - MM/DD/YYYY], [Name] and [Summary of Changes]
+"""
+
+
+import re  #import regex function
+import os   #import OS library
+import sys  #import sys library
+
+####################
+### TOKENS    ####
+###################
+
+TT_BEGIN = "PROGRAM_BEGIN"
+TT_PRINT = "OUTPUT"
+TT_PRINTLN = "OUTPUT_WITH_LINE"
+TT_ADD = "BASIC_OPERATOR_ADD"
+TT_SUB = "BASIC_OPERATOR_SUB"
+TT_MUL = "BASIC_OPERATOR_MUL"
+TT_DIV = "BASIC_OPERATOR_DIV"
+TT_MOD = "BASIC_OPERATOR_MOD"
+TT_ROOT = "ADVANCE_OPERATOR_ROOT"
+TT_RAISE = "ADVANCE_OPERATOR_EXP"
+TT_MEAN = "ADVANCE_OPERATOR_AVE"
+TT_DIST = "ADVANCE_OPERATOR_DIST"
+TT_AND = "DISTANCE_SEPARATOR"
+TT_VARINT = "DECLARATION_INT"
+TT_VARSTR = "DECLARATION_STRING"
+TT_STORE = "ASSIGN_KEY"
+TT_IN = "ASSIGN_VAR_KEY"
+TT_WITH = "DECLARATION_ASSIGN_WITH_KEY"
+TT_INPUT = "INPUT"
+TT_END = "PROGRAM_END"
+
+######################################
+### DEFINE KEYWORDS FOR TOKENS    ####
+######################################
+
+keywords = [
+    'BEGIN',
+    'PRINT',
+    'RAISE',
+    'ROOT',
+    'PRINTLN',
+    'ADD',
+    'SUB',
+    'MUL',
+    'AND',
+    'DIV',
+    'MOD',
+    'MEAN',
+    'DIST',
+    'IN',
+    'INPUT',
+    'WITH',
+    'VARINT',
+    'VARSTR',
+    'END',
+    'STORE'
+    ]
+
+#########################################
+##### OPERATOR PARSER FUNCTION ##########
+#########################################
+
+# Mean function / average function; average = Summation of Number / Total Count of Numbers
+def mean(*num):
+    sumno = 0
+    for x in num:
+        sumno = sumno + x
+
+    avg = int(sumno / len(num))
+    return avg
+
+# Define distance function
+# Distance = square root((x2 - x1)^2 + (y2 - y1)^2)
+# Distance is the square root of the summation between the difference between x subscript 1 and x subscript 2
+# and the difference between u subscript 1 and y subscript 2.
+# Where x is the x coordinate ; y is the y coordinate and the subscript denotes the entity holding those coordinates
+
+def distance (x1,y1,x2,y2):
+    distance_between_x = abs(x2 - x1) ** 2
+    distance_between_y = abs(y2 - y1) ** 2
+
+    return int((distance_between_x + distance_between_y) ** (1/2.0))
+
+### Parser for mathematical interpretation
+
+def parser_for_operator(token_stream):
+    """
+    This function servers as the parser or as the grammar when interpreting the file. All operators follow
+    a pre-fix notation so ADD 1 SUB 13 MEAN 1 2 3 4 will always be read right to left.
+    ADD 1 SUB 13 MEAN 1 2 3 4 ---> ADD( 1 SUB( 13 MEAN ( 1 2 3 4)))) or 1 + (13 - (Average of (1, 2 ,3, 4)))
+    """
+    counter = len(token_stream) - 1
+    operator_stage = []
+    advance_stage = []
+    x = None
+    counter_adj = 0
+    try:
+        while counter >= 0:
+            operator_type = token_stream[counter][0]
+            operator_value = token_stream[counter][1]
+            if operator_type == "NUMBER":
+                operator_stage.append(int(operator_value))
+            else:
+                if operator_type == "BASIC_OPERATOR_ADD":
+                    x = operator_stage[1 + counter_adj] + operator_stage[0 + counter_adj]
+                    operator_stage.append(int(x))
+                    counter_adj += 2
+                elif operator_type == "BASIC_OPERATOR_SUB":
+                    x = operator_stage[1 + counter_adj] - operator_stage[0 + counter_adj]
+                    operator_stage.append(int(x))
+                    counter_adj += 2
+                elif operator_type == "BASIC_OPERATOR_MUL":
+                    x = operator_stage[1 + counter_adj] * operator_stage[0 + counter_adj]
+                    operator_stage.append(int(x))
+                    counter_adj += 2
+                elif operator_type == "BASIC_OPERATOR_DIV":
+                    x = operator_stage[1 + counter_adj] // operator_stage[0 + counter_adj]
+                    operator_stage.append(int(x))
+                    counter_adj += 2
+                elif operator_type == "BASIC_OPERATOR_MOD":
+                    x = operator_stage[1 + counter_adj] % operator_stage[0 + counter_adj]
+                    operator_stage.append(int(x))
+                    counter_adj += 2
+                elif operator_type == "ADVANCE_OPERATOR_EXP":
+                    x = operator_stage[1 + counter_adj] ** operator_stage[0 + counter_adj]
+                    operator_stage.append(int(x))
+                    counter_adj += 2
+                elif operator_type == "ADVANCE_OPERATOR_ROOT":
+                    x = int(operator_stage[0 + counter_adj] ** (1 / operator_stage[1 + counter_adj]))
+                    operator_stage.append(int(x))
+                    counter_adj += 2
+                elif operator_type == "ADVANCE_OPERATOR_AVE":
+                    y = len(operator_stage[counter_adj:])
+                    for n in range(counter_adj, counter_adj + y):
+                        advance_stage.append(int(operator_stage[n]))
+                    x = mean(*advance_stage)
+                    operator_stage.append(int(x))
+                    counter_adj += y
+                    advance_stage.clear()
+                elif operator_type == "DISTANCE_SEPARATOR":
+                    for n in range(counter_adj, counter_adj + 2):
+                        advance_stage.append(int(operator_stage[n]))
+                    counter_adj += 2
+                elif operator_type == "ADVANCE_OPERATOR_DIST":
+                    for n in range(counter_adj, counter_adj + 2):
+                        advance_stage.append(int(operator_stage[n]))
+                    advance_stage.reverse()
+                    x = distance(*advance_stage)
+                    operator_stage.append(int(x))
+                    counter_adj += 2
+                    advance_stage.clear()
+                else:
+                    raise ArithmeticError
+            counter -= 1
+        return x
+    except:
+        raise ArithmeticError
+
+################# END OF OPERATOR PARSER #############################
+
+################ Variable Parser ##########################
+def variable_parser(token_stream):
+    """
+    This parser will be used to prioritize and validate string and integer inputs and storing them to their respective and defined
+    variables. Declaring a variable takes precedence before any value can be stored into it. However, storing a value to variable
+    will be handled by the outer parser.
+    """
+    operator_tokens = ['BASIC_OPERATOR_ADD', 'BASIC_OPERATOR_SUB', 'BASIC_OPERATOR_MUL', 'BASIC_OPERATOR_DIV', 'BASIC_OPERATOR_MOD', 'ADVANCE_OPERATOR_EXP', 'ADVANCE_OPERATOR_ROOT']
+    initial_token_type = token_stream[0][0]
+    variable = None
+    value = None
+    Type = None
+    m = 0
+    token_steam_for_operators = []
+#### FOR VARSTR Variables and Declaration ######
+    if initial_token_type == "DECLARATION_STRING":
+        token_index = 1
+        Type = "STRING"
+        while token_index < len(token_stream):
+            token_type = token_stream[token_index][0]
+            if token_type == "IDENTIFIER":
+                variable = token_stream[token_index][1]
+            elif token_type == "DECLARATION_ASSIGN_WITH_KEY":
+                var_flag = True
+            elif token_type == "STRING" and var_flag is True:
+                value = token_stream[token_index][1][1:-1]
+            elif token_type == "NUMBER" and var_flag is True:
+                raise IOError
+            else:
+                raise IndentationError
+            token_index += 1
+#### FOR VARINT Variables and Declaration ######
+    elif initial_token_type == "DECLARATION_INT":
+        token_index = 1
+        Type = "NUMBER"
+        while token_index < len(token_stream):
+            token_type = token_stream[token_index][0]
+            if token_type == "IDENTIFIER":
+                variable = token_stream[token_index][1]
+            elif token_type == "DECLARATION_ASSIGN_WITH_KEY":
+                var_flag = True
+            elif token_type == "NUMBER" and var_flag is True:
+                value = token_stream[token_index][1]
+            elif token_type in operator_tokens and var_flag is True:
+                m = len(token_stream) - token_index
+                for n in range(0, m):
+                    token_steam_for_operators.append([token_stream[token_index + n][0], token_stream[token_index + n][1]])
+                value = parser_for_operator(token_steam_for_operators)
+                break
+            elif token_type == "STRING" and var_flag is True:
+                raise IOError
+            else:
+                raise IndentationError
+            token_index += 1
+#### Providing the correct syntax before storing the value to a variable ######
+    elif initial_token_type == "ASSIGN_KEY":
+        token_index = 1
+        while token_index < len(token_stream):
+            token_type = token_stream[token_index][0]
+            if token_type in ("STRING", "NUMBER") or token_type in operator_tokens:
+                if token_type in operator_tokens:
+                    pointer = token_index
+                    while pointer < len(token_stream):
+                        if token_stream[pointer][0] == "ASSIGN_VAR_KEY":
+                            m = pointer - 1
+                            var_flag = True
+                            break
+                        else:
+                            pass
+                        pointer += 1
+
+                    if var_flag is True:
+                        for n in range(0, m):
+                            token_steam_for_operators.append([token_stream[token_index + n][0], token_stream[token_index + n][1]])
+                            var_flag = False
+                    else:
+                        raise IndentationError
+
+                    #adjusting index
+                    token_index += (m - 1)
+
+                    #replacing variable assingment
+                    value = parser_for_operator(token_steam_for_operators)
+
+                    #setting value as number
+                    Type = "NUMBER"
+                else:
+                    if token_type == "STRING":
+                        Type = "STRING"
+                    else:
+                        Type = "NUMBER"
+
+                    value = token_stream[token_index][1]
+            elif token_type == "ASSIGN_VAR_KEY":
+                var_flag = True
+            elif token_type == "IDENTIFIER" and var_flag is True:
+                variable = token_stream[token_index][1]
+            else:
+                raise SyntaxError
+
+            token_index += 1
+
+    ### Fall out checking ###
+    ### this set of checking is done to catch any errors when mapping variables to their values
+    if initial_token_type == "ASSIGN_KEY":
+        if value is None or variable is None or Type is None:
+            raise IOError
+        else:
+            return variable, value, Type
+    elif initial_token_type in ("DECLARATION_INT", "DECLARATION_STRING"):
+        if (value is None and variable is None) or Type is None:
+            raise IOError
+        elif (value is not None and variable is None):
+            raise IOError
+        else:
+            return variable, value, Type
+
+############### END OF VARIABLE PARSER #######################################
+
+class Lexer(object):
+    """
+    A Lexer interprets the words and outputs corresponding tokens for each word interpreted
+    """
+
+    def __init__(self, source_code):
+        self.source_code = source_code
+
+    def tokenize(self):
+        # sotring tokens
+        tokens = []
+
+        #create a word list of the source code
+        source_code = self.source_code.split()
+
+        #initiate initial values
+        source_idx = 0
+        sentence_flag = False
+
+        # looping through each word; words are the elements separated by a list
+        # words separated by a space delimiter will be combined if it's a string such as
+        # [I have a pen] where in it's separated by space. To remedy this into one token
+        # [I have a pen] will be read as one entity
+        if len(source_code) == 0:
+            tokens.append([line_no + 1, "END_OF_STATEMENT", "EOS"])
+        else:
+            while source_idx < len(source_code):
+
+                if sentence_flag is False:
+                    word = source_code[source_idx]
+                else:
+                    word = word + r' ' + source_code[source_idx]
+
+                # mapping of tokens to each keyword, numbers or letters and defining them as numbers, string or identitifers
+                # comments are disregarded
+                if word in keywords:
+                    switcher = {
+                        'BEGIN': TT_BEGIN,
+                        'ADD': TT_ADD,
+                        'AND': TT_AND,
+                        'PRINT': TT_PRINT,
+                        'SUB': TT_SUB,
+                        'MUL': TT_MUL,
+                        'ROOT': TT_ROOT,
+                        'RAISE': TT_RAISE,
+                        'DIV': TT_DIV,
+                        'MOD': TT_MOD,
+                        'PRINTLN': TT_PRINTLN,
+                        'INPUT': TT_INPUT,
+                        'MEAN': TT_MEAN,
+                        'DIST': TT_DIST,
+                        'WITH': TT_WITH,
+                        'VARINT': TT_VARINT,
+                        'STORE': TT_STORE,
+                        'IN' : TT_IN,
+                        'VARSTR': TT_VARSTR,
+                        'END': TT_END
+                    }
+                    tokens.append([line_no + 1, switcher.get(word, ''), word])
+                elif re.search('^["\[]', word) and re.search('["\]]$', word) :
+                        sentence_flag = False
+                        tokens.append([line_no + 1, "STRING", word])
+                elif re.search('^["\[]', word):
+                        sentence_flag = True
+                elif re.match('[a-z]', word) or re.match('[A-Z]', word):
+                    tokens.append([line_no + 1, "IDENTIFIER", word])
+                elif re.match('[0-9]', word) or re.match('^-[0-9]', word) or re.match('^.[0-9]', word):
+                    if word.find(".") >= 0:
+                        raise TypeError
+                    else:
+                        tokens.append([line_no + 1, "NUMBER", word])
+                elif re.match('^#', word):
+                    sentence_flag = True
+                    pass
+                else:
+                    raise SyntaxError
+                source_idx += 1
+            tokens.append([line_no + 1, "END_OF_STATEMENT", "EOS"])
+
+        return tokens
+
+#################################################
+######## Start of Display for Program ###########
+#################################################
+
+print('$ python3 interpol.py')
+print('========  INTERPOL INTERPRETER STARTED   ========')
+path = os.getcwd()
+
+# Program Attempts to load the file. If it fails File not found will be displayed.
+try:
+    fileName = sys.argv[1]
+except:
+    print("[File not found]: File does not exist")
+    exit()
+
+file_processing = str(fileName)
+file_display_name = ""
+
+# Extracts the file name from the file format and prints it
+
+if file_processing.rfind("\\") > 0:
+    file_display_name = file_processing[file_processing.rfind("\\") + 1: len(file_processing)]
+else:
+    file_display_name = file_processing[file_processing.rfind("/") + 1: len(file_processing)]
+
+print("Enter INTERPOL file (.ipol): " + str(file_display_name))
+
+# Checks if the file extension is .ipol. If not it returns an error
+if fileName[len(fileName) - 5:len(fileName)] != ".ipol":
+    print("[Invalid file] : Input file does not end with .ipol")
+    exit()
+
+# Only one file should be opened. If two are found, the error below will be displayed
+try:
+    print('[Invalid file] Expected 1 argument found 2 (' + sys.argv[1] + ", " + sys.argv[2] + ')')
+    exit()
+except:
+    pass
+
+print('================ INTERPOL OUTPUT ================')
+print('----------------  OUTPUT START  ---------------->')
+
+content_check = []
+
+# Attempts to open the file. If it fails, it will return an error
+try:
+    with open(fileName, "r") as file:
+        content_staging = file.readlines()
+        for i in content_staging:
+            content_check.append(i.split())
+
+except:
+    print('[Invalid file]: Can not open "' + fileName + '"')
+    exit()
+
+# Program will check if the file is empty. If so, it will return an error.
+if len(content_check) == 0:
+    print('[File is empty]: File "' + fileName + '" is empty')
+    exit()
+else:
+    pass
+
+# Program will check if the file has a begin and end statement. If it fails to find an "END", an error
+# will be returned. If "BEGIN" is missing, an error will also be thrown back to the user.
+start_line = 0
+end_line = 0
+start_program_flag = False
+end_program_flag = False
+for line_count_val in range(0, len(content_check)):
+    if "".join(content_check[line_count_val]) == "BEGIN":
+        start_program_flag = True
+        start_line = line_count_val
+    elif "".join(content_check[line_count_val]) == "END":
+        start_program_flag = False
+        end_program_flag = True
+        end_line = line_count_val + 1
+        break
+    else:
+        pass
+
+if start_program_flag is False and end_program_flag is True:
+    pass
+elif start_program_flag is False and end_program_flag is True:
+    print("[Invalid syntax]: Syntax is invalid")
+    exit()
+else:
+    print("[Invalid end of file]: If there is no END")
+    exit()
+
+line_no = 0
+complete_tokens = []
+content = content_staging [start_line:end_line]
+
+#########################################
+##### MAIN BODY OF THE PROGRAM ##########
+#########################################
+try:
+    while line_no < len(content):
+    # --------------------------------------
+    #  LEXER
+    # --------------------------------------
+
+        # Create an instance of the lexer class
+
+        lex = Lexer(content[line_no])
+
+        # Call lexer method to perform lexical analysis on code
+        tokens = lex.tokenize()
+        complete_tokens.append(tokens)
+        line_no += 1
+
+    # defines all operator / arithmetic keywords
+    operator_keywords = ['BASIC_OPERATOR_ADD', 'BASIC_OPERATOR_SUB', 'BASIC_OPERATOR_MUL', 'BASIC_OPERATOR_DIV', 'BASIC_OPERATOR_MOD', 'ADVANCE_OPERATOR_EXP', 'ADVANCE_OPERATOR_ROOT', 'ADVANCE_OPERATOR_AVE', 'ADVANCE_OPERATOR_DIST', 'DISTANCE_SEPARATOR' ]
+
+    # dictionary to act as our variable storage
+    variable_list = {}
+
+
+    for line_no in range(0, len(complete_tokens)):
+        token_per_line = complete_tokens[line_no]
+
+        if len(token_per_line) <= 1:
+            n = 0
+            m = 0
+        elif len(token_per_line) == 2:
+            n = 0
+            m = 1
+        else:
+            n = 1
+            m = len(token_per_line) - 1
+        x = 0
+        left_most_token = token_per_line[0][1]
+        suceeding_token = token_per_line[n][1]
+        right_most_token = token_per_line[m][1]
+        checking_value = None
+        token_string = []
+        result = None
+
+        #Checks if line has End of Statement since a new line is our delimiter
+        if right_most_token == "END_OF_STATEMENT":
+            # Outer Layer of our parser
+            if left_most_token in ("PROGRAM_BEGIN", "PROGRAM_END"):
+                pass
+            # If print / println is seen in the program, it will start doing the math before displaying it as an output
+            elif left_most_token in ("OUTPUT", "OUTPUT_WITH_LINE"):
+                if suceeding_token in operator_keywords:
+                    for x in range(n,m):
+                        if token_per_line[x][1] in operator_keywords or token_per_line[x][1] == "NUMBER":
+                            token_string.append([token_per_line[x][1], token_per_line[x][2]])
+                        elif token_per_line[x][1] == "IDENTIFIER":
+                            checking_value = token_per_line[x][2]
+                            if checking_value in variable_list.keys():
+                                if variable_list[checking_value]["TYPE"] == "NUMBER":
+                                    token_string.append(["NUMBER", variable_list[checking_value]["VALUE"]])
+                                else:
+                                    raise TypeError
+                        else:
+                            raise SyntaxError
+                    result = parser_for_operator(token_string)
+                elif suceeding_token in ("STRING", "NUMBER"):
+                    result = token_per_line[n][2]
+                elif suceeding_token == "IDENTIFIER":
+                    checking_value = token_per_line[n][2]
+                    if checking_value in variable_list.keys():
+                        result = variable_list[checking_value]["VALUE"]
+                else:
+                    raise SyntaxError
+            # Checks Variable declared. If a variable is already declared it will display an error
+            # Likewise, if there is no declared variable, an error will be displayed.
+            elif left_most_token in ("DECLARATION_INT", "DECLARATION_STRING", "ASSIGN_KEY", "INPUT"):
+                if left_most_token == "INPUT":
+                    input_statement = input()
+
+                    if re.match('[0-9]', input_statement or re.match('^-[0-9]', input_statement)):
+                        if input_statement.find(".") >= 0:
+                            raise TypeError
+                        else:
+                            value = input_statement
+                            variable = token_per_line[n][2]
+                            type = "NUMBER"
+                    else:
+                        value = input_statement
+                        variable = token_per_line[n][2]
+                        type = "STRING"
+                else:
+                    for x in range(0, m):
+                        token_string.append([token_per_line[x][1], token_per_line[x][2]])
+
+                    variable, value, type = variable_parser(token_string)
+
+                ########## Checking for variable and types ##################
+                if variable not in variable_list.keys() and left_most_token in ("DECLARATION_INT", "DECLARATION_STRING"):
+                    variable_list[variable] = {"TYPE": type, "VALUE": value}
+                elif variable in variable_list.keys() and left_most_token in ("ASSIGN_KEY", "INPUT"):
+                    if variable_list[variable]["TYPE"] == type:
+                        variable_list[variable]["VALUE"] = value
+                    else:
+                        raise IOError
+                elif variable not in variable_list.keys() and left_most_token in ("ASSIGN_KEY", "INPUT"):
+                    raise NameError
+                else:
+                    pass
+                    raise KeyError
+
+                result = None
+            # for math done in the program
+            elif left_most_token in operator_keywords:
+                for x in range(0, m):
+                    if token_per_line[x][1] in operator_keywords or token_per_line[x][1] == "NUMBER":
+                        token_string.append([token_per_line[x][1], token_per_line[x][2]])
+                    elif token_per_line[x][1] == "IDENTIFIER":
+                        checking_value = token_per_line[x][2]
+                        if checking_value in variable_list.keys():
+                            if variable_list[checking_value]["TYPE"] == "NUMBER":
+                                token_string.append(["NUMBER", variable_list[checking_value]["VALUE"]])
+                            else:
+                                raise IOError
+                    else:
+                        raise ValueError
+                result = parser_for_operator(token_string)
+        else:
+            raise IndentationError
+
+        # if no output is identified then it won't display anything
+        # else it will output the result
+        if result is None:
+            pass
+        else:
+            print(result)
+
+#### Customized Errors that is done to only display the following errors when the file encounters them
+#### Line no signifies where it occured
+#### All error follows the [Error Message]: Error Description
+except SyntaxError:
+    ### Syntax is invalid #####
+    print("[Invalid syntax]: Syntax is invalid in line [" + str(line_no + 1) + "]")
+except NameError:
+    ### A variable must be declared before use ###
+    print("[Variable is not declared]: A variable must be declared before use in line [" + str(line_no + 1) + "]")
+except IndentationError:
+    ### Invalid expression ###
+    print("[Invalid expression]: A variable must be declared before use in line [" + str(line_no + 1) + "]")
+except ArithmeticError:
+    ### General error for invalid arithmetic expression #####
+    print("[Invalid arithmetic operation]: General error for invalid arithmetic expression in line [" + str(line_no + 1) + "]")
+except KeyError:
+    ### Variable name has been declared before ###
+    print("[Duplicate variable declaration]: Variable name has been declared before in line [" + str(line_no + 1) + "]")
+except TypeError:
+    ### Invalid data type #####
+    print("[Invalid data type]: Invalid data type (i.e. using float) in line [" + str(line_no + 1) + "]")
+except ValueError:
+    ### If an operation on incompatible data types is done #####
+    print("[Incompatible data type]: If an operation on incompatible data types is done in line [" + str(line_no + 1) + "]")
+except IOError:
+    ### If the data type inputted is invalid (i.e. float) ###
+    print("[Invalid data type input]: If the data type inputted is invalid (i.e. float) in line [" + str(line_no + 1) + "]")
+
+print('<----------------- OUTPUT END -------------------')
+
+############################################
+##### END OF MAIN BODY OF PROGRAM ##########
+############################################
+
+#### displaying complete lexemes and tokens ########
+print('========= INTERPOL LEXEMES/TOKENS TABLE =========\n')
+
+#Displays formatted and tabularized format for Lexemes
+print("{:<11} {:<30} {:<10}".format("LINE NO.", "TOKENS", "LEXEMES"))
+lexer_counter = 0
+lexer_end = len(complete_tokens)
+
+while lexer_counter < lexer_end:
+    lexer_inner_counter = 0
+    lexer_inner_end = len(complete_tokens[lexer_counter])
+    while lexer_inner_counter < lexer_inner_end:
+        print ('{:<11} {:<30} {:<10}'.format(*complete_tokens[lexer_counter][lexer_inner_counter]))
+        lexer_inner_counter += 1
+    lexer_counter += 1
+print('\n================= SYMBOLS TABLE =================\n')
+
+#Displays formatted for variables
+print("{:<19} {:<15} {:<10}".format("VARIABLE NAME", "TYPE", "VALUE"))
+for i in variable_list :
+    variable_name_dict = str(i)
+    type_name = str(variable_list[i]["TYPE"])
+    value_from_dict = str(variable_list[i]["VALUE"])
+    print("{:<19} {:<15} {:<10}".format(variable_name_dict, type_name, value_from_dict))
+print('\n======== INTERPOL INTERPRETER TERMINATED ========')
+
+#End of Program
